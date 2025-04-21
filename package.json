@@ -5,8 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node src/mock-mcp-server.mjs",
-    "start:server": "node src/mock-mcp-server.mjs",
+    "start": "tsx src/llm.ts",
+    "dev": "tsx watch src/llm.ts",
+    "mock-server": "node src/mock-mcp-server.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
