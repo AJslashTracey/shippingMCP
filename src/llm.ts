@@ -45,6 +45,8 @@ app.listen(PORT, () => {
 });
 
 
+const MCP_SERVER_URL = process.env.MCP_SERVER_URL;
+
 console.log("MCP_SERVER_URL", process.env.MCP_SERVER_URL);
 
 
@@ -60,7 +62,7 @@ app.get("/:promt", async (req: Request, res: Response) => {
     });
 
     // Use environment variable, fallback for local dev
-    const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3001/.well-known/ai-plugin.json";
+    const MCP_SERVER_URL = process.env.MCP_SERVER_URL ;
     
     console.log("MCP_SERVER_URL:", MCP_SERVER_URL);
     const tools = await createToolFromMCP({
