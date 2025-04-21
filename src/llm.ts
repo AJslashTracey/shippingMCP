@@ -54,7 +54,7 @@ app.get("/:promt", async (req: Request, res: Response) => {
   try {
     const llm = new ChatOpenAI({
       openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-4o-mini",
+      modelName: "gpt-4",
       temperature: 1
 
     });
@@ -62,7 +62,7 @@ app.get("/:promt", async (req: Request, res: Response) => {
     // Use environment variable, fallback for local dev
     const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3001/.well-known/ai-plugin.json";
     
-    console.log("Attempting to create tool with MCP URL:", MCP_SERVER_URL);
+    console.log("MCP_SERVER_URL:", MCP_SERVER_URL);
     const tools = await createToolFromMCP({
       mcpUrl: MCP_SERVER_URL,
     });
