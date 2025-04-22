@@ -5,7 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node src/mock-mcp-server.mjs",
+    "start": "tsx watch src/llm.ts",
+    "dev": "nodemon --exec tsx src/llm.ts",
+    "start:direct": "tsx src/llm.ts",
     "start:server": "node src/mock-mcp-server.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,10 +20,12 @@
     "express": "^5.1.0",
     "langchain": "^0.3.23",
     "node-fetch": "^3.3.2",
-    "nodemon": "^3.1.9", 
+    "nodemon": "^3.1.9",
     "simple-statistics": "^7.8.8"
   },
   "devDependencies": {
+    "@types/express": "^5.0.1",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.3"
   }
 }
