@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 // Import necessary OpenAI components and dotenv
 import { ChatOpenAI } from "@langchain/openai";
 import * as dotenv from "dotenv";
+import { DynamicTool } from "langchain/tools";
 
 dotenv.config(); // Ensure environment variables are loaded
 
@@ -97,17 +98,15 @@ function extractCryptoSymbol(input: string): string | null {
 export class McpTool extends Tool {
   name = "mcp";
   description = "A tool for interacting with MCP servers";
-  // Add an OpenAI client instance to the tool
   private llm: ChatOpenAI;
 
   constructor(private mcpUrl: string) {
     super();
-    // Initialize the LLM client within the tool
     this.llm = new ChatOpenAI({
-        openAIApiKey: process.env.OPENAI_API_KEY,
-        modelName: "gpt-4",
-        maxTokens: 500,
-        temperature: 0.5
+      openAIApiKey: process.env.OPENAI_API_KEY,
+      modelName: "gpt-4",
+      maxTokens: 500,
+      temperature: 0.5
     });
   }
 
@@ -115,110 +114,76 @@ export class McpTool extends Tool {
     try {
       console.log(`Input received by McpTool: "${input}"`);
 
+      const apiKey = process.env.TRENDMOON_API_KEY;
+      if (!apiKey) {
+        throw new Error("TRENDMOON_API_KEY environment variable is not set");
+      }
+
       // Check if this is an alerts request
       const isAlertsRequest = input.toLowerCase().includes("alert") || 
-                             input.toLowerCase().includes("alerts") ||
-                             input.toLowerCase().includes("crypto alerts");
+                           input.toLowerCase().includes("alerts") ||
+                           input.toLowerCase().includes("crypto alerts");
 
       if (isAlertsRequest) {
-        console.log("Detected alerts request, using API call...");
-        const apiKey = process.env.TRENDMOON_API_KEY;
-        if (!apiKey) {
-          console.log("TRENDMOON_API_KEY not found in environment variables");
-          return "Error: TRENDMOON_API_KEY environment variable is not set.";
-        }
-
-        try {
-          const apiUrl = new URL('https://api.qa.trendmoon.ai/get_top_alerts_today');
-          console.log("Calling Trendmoon API:", apiUrl.toString());
-          
-          const alertsResponse = await fetch(apiUrl.toString(), {
-            method: 'GET',
-            headers: {
-              'accept': 'application/json',
-              'Api-key': apiKey,
-            }
-          });
-
-          if (!alertsResponse.ok) {
-            const errorText = await alertsResponse.text();
-            console.error(`Error fetching alerts from Trendmoon API: ${alertsResponse.status} ${alertsResponse.statusText} - ${errorText}`);
-            return `Error from Trendmoon API: ${alertsResponse.status} ${alertsResponse.statusText}`;
+        const apiUrl = 'https://api.qa.trendmoon.ai/get_top_alerts_today';
+        console.log("Calling Trendmoon Alerts API:", apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'accept': 'application/json',
+            'Api-key': apiKey,
           }
+        });
 
-          const alertsData = await alertsResponse.json();
-          return JSON.stringify(alertsData);
-        } catch (apiError: any) {
-          console.error(`Error calling Trendmoon Alerts API:`, apiError);
-          return `Error calling Trendmoon Alerts API: ${apiError.message || 'Unknown error'}`;
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
         }
+
+        const data = await response.json();
+        return JSON.stringify(data);
       }
 
       // Handle social trend queries
       const isSocialTrendQuery = input.toLowerCase().includes("trend") ||
-                                input.toLowerCase().includes("social") ||
-                                input.toLowerCase().includes("sentiment") ||
-                                input.toLowerCase().includes("market") ||
-                                input.toLowerCase().includes("price") ||
-                                input.toLowerCase().includes("sol") ||
-                                input.toLowerCase().includes("solana") ||
-                                input.toLowerCase().includes("analys") ||  // Will match 'analysis', 'analyses', 'analyze'
-                                input.toLowerCase().includes("study");     // Additional term for analysis
+                              input.toLowerCase().includes("social") ||
+                              input.toLowerCase().includes("sentiment") ||
+                              input.toLowerCase().includes("market") ||
+                              input.toLowerCase().includes("price") ||
+                              input.toLowerCase().includes("analys") ||
+                              input.toLowerCase().includes("study");
 
       const symbolFromInput = extractCryptoSymbol(input);
 
       if (isSocialTrendQuery && symbolFromInput) {
-        console.log(`Detected social trend query for ${symbolFromInput}`);
-
-        const apiKey = process.env.TRENDMOON_API_KEY;
-        if (!apiKey) {
-          return "Error: TRENDMOON_API_KEY environment variable is not set.";
-        }
-
         const apiUrl = new URL('https://api.qa.trendmoon.ai/social/trend');
         apiUrl.searchParams.append('symbol', symbolFromInput);
+        apiUrl.searchParams.append('date_interval', '20');  // Default to 20 days
+        apiUrl.searchParams.append('time_interval', '1d');  // Daily intervals
 
-        let dateInterval = 20;
-        const dateIntervalMatch = input.match(/(\d+)\s*days?/i) || input.match(/interval\s+(\d+)/i);
-        if (dateIntervalMatch) {
-          const parsedInterval = parseInt(dateIntervalMatch[1]);
-          if (!isNaN(parsedInterval) && parsedInterval > 0) {
-            dateInterval = parsedInterval;
+        console.log(`Calling Trendmoon Social Trend API: ${apiUrl.toString()}`);
+
+        const response = await fetch(apiUrl.toString(), {
+          method: 'GET',
+          headers: {
+            'accept': 'application/json',
+            'Api-key': apiKey,
           }
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
         }
-        apiUrl.searchParams.append('date_interval', dateInterval.toString());
-        apiUrl.searchParams.append('time_interval', '1d');
 
-        console.log(`Calling Trendmoon API: ${apiUrl.toString()}`);
-
-        try {
-          const trendmoonResponse = await fetch(apiUrl.toString(), {
-            method: 'GET',
-            headers: {
-              'accept': 'application/json',
-              'Api-key': apiKey,
-            }
-          });
-
-          if (!trendmoonResponse.ok) {
-            const errorText = await trendmoonResponse.text();
-            console.error(`Error fetching from Trendmoon API: ${trendmoonResponse.status} ${trendmoonResponse.statusText} - ${errorText}`);
-            return `Error from Trendmoon API: ${trendmoonResponse.status} ${trendmoonResponse.statusText}`;
-          }
-
-          const trendmoonData = await trendmoonResponse.json();
-          return JSON.stringify(trendmoonData);
-        } catch (error: any) {
-          console.error(`Error calling Trendmoon API:`, error);
-          return `Error: ${error.message || 'Unknown error'}`;
-        }
+        const data = await response.json();
+        return JSON.stringify(data);
       }
 
       return "Please specify either an alerts request or a social trend query with a valid cryptocurrency symbol.";
 
     } catch (error: any) {
-      console.error(`Unhandled error in McpTool._call: ${error.message || 'Unknown error'}`);
-      return `Error: ${error.message || 'Unknown error'}`;
+      console.error(`Error calling Trendmoon API:`, error);
+      throw error;
     }
   }
 }
