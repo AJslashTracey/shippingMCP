@@ -7,6 +7,24 @@ import { DynamicTool } from "langchain/tools";
 
 dotenv.config(); // Ensure environment variables are loaded
 
+// Function to verify API key
+async function verifyApiKey(apiKey: string): Promise<boolean> {
+  try {
+    // Simple verification request to check if API key is valid
+    const response = await fetch('https://api.trendmoon.ai/health', {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json',
+        'Api-Key': apiKey,
+      }
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('API Key verification failed:', error);
+    return false;
+  }
+}
+
 // Function to extract cryptocurrency symbol from input
 function extractCryptoSymbol(input: string): string | null {
   const cryptoPatterns = [
@@ -118,6 +136,12 @@ export class McpTool extends Tool {
       if (!apiKey) {
         throw new Error("TRENDMOON_API_KEY environment variable is not set");
       }
+      
+      // Verify API key
+      const isApiKeyValid = await verifyApiKey(apiKey);
+      if (!isApiKeyValid) {
+        throw new Error("Invalid Trendmoon API key or service unavailable");
+      }
 
       // Check if this is an alerts request
       const isAlertsRequest = input.toLowerCase().includes("alert") || 
@@ -125,7 +149,7 @@ export class McpTool extends Tool {
                            input.toLowerCase().includes("crypto alerts");
 
       if (isAlertsRequest) {
-        const apiUrl = 'https://api.qa.trendmoon.ai/get_top_alerts_today';
+        const apiUrl = 'https://api.trendmoon.ai/get_top_alerts_today';
         console.log("Calling Trendmoon Alerts API:", apiUrl);
         
         const response = await fetch(apiUrl, {
@@ -137,7 +161,8 @@ export class McpTool extends Tool {
         });
 
         if (!response.ok) {
-          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+          const errorBody = await response.text().catch(() => 'Could not read error body');
+          throw new Error(`API request failed: ${response.status} ${response.statusText}. Body: ${errorBody}`);
         }
 
         const data = await response.json();
@@ -157,7 +182,7 @@ export class McpTool extends Tool {
       const symbolFromInput = extractCryptoSymbol(input);
 
       if (isSocialTrendQuery && symbolFromInput) {
-        const apiUrl = new URL('https://api.qa.trendmoon.ai/social/trend');
+        const apiUrl = new URL('https://api.trendmoon.ai/social/trend');
         apiUrl.searchParams.append('symbol', symbolFromInput);
         apiUrl.searchParams.append('date_interval', '20');  // Default to 20 days
         apiUrl.searchParams.append('time_interval', '1d');  // Daily intervals
@@ -173,7 +198,8 @@ export class McpTool extends Tool {
         });
 
         if (!response.ok) {
-          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+          const errorBody = await response.text().catch(() => 'Could not read error body');
+          throw new Error(`API request failed: ${response.status} ${response.statusText}. Body: ${errorBody}`);
         }
 
         const data = await response.json();
