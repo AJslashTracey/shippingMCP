@@ -75,8 +75,8 @@ const server = http.createServer((req, res) => {
      return;
    }
    
-   // Handle GET requests to the AI plugin endpoint
-   if (req.method === 'GET' && req.url === '/.well-known/ai-plugin.json') {
+   // Handle GET requests to both root and AI plugin endpoint
+   if (req.method === 'GET' && (req.url === '/' || req.url === '/.well-known/ai-plugin.json')) {
      res.writeHead(200, { 'Content-Type': 'application/json' });
      res.end(JSON.stringify(mockResponse));
      return;
