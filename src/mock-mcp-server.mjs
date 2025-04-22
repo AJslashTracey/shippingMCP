@@ -1,10 +1,11 @@
 import http from 'http';
+import dayjs from 'dayjs';
 
-const PORT = process.env.PORT || 8000;
+const PORT = 3000;
 
-// MCP Configuration
-const mcpConfig = {
-  name: "Trendmoon MCP",
+// Mock response data 
+const mockResponse = {
+  name: "Mock MCP Server",
   version: "1.0.0",
   tools: [
     {
@@ -53,7 +54,7 @@ const mcpConfig = {
       parameters: {
         type: "object",
         properties: {},
-        required: []
+        required: [] // No parameters needed
       }
     }
   ]
@@ -74,18 +75,18 @@ const server = http.createServer((req, res) => {
      return;
    }
    
-   // Handle GET requests to both root and AI plugin endpoint
-   if (req.method === 'GET' && (req.url === '/' || req.url === '/.well-known/ai-plugin.json')) {
+   // Handle GET requests to the AI plugin endpoint
+   if (req.method === 'GET' && req.url === '/.well-known/ai-plugin.json') {
      res.writeHead(200, { 'Content-Type': 'application/json' });
-     res.end(JSON.stringify(mcpConfig));
+     res.end(JSON.stringify(mockResponse));
      return;
    }
    
-   // All other requests
+   // All other requests should go to the real API
    res.writeHead(404, { 'Content-Type': 'text/plain' });
-   res.end('Not Found');
+   res.end('Not Found - Please use the real Trendmoon API endpoint');
 });
 
 server.listen(PORT, () => {
-  console.log(`MCP server running at http://localhost:${PORT}`);
+  console.log(`Mock MCP server running at http://localhost:${PORT}/.well-known/ai-plugin.json`);
 });

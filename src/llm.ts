@@ -7,10 +7,6 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
 dotenv.config();
 
-console.log("starting LLM endpoint");
-
-
-
 const app = express();
 const systemMessage = new SystemMessage(`
 Your ONLY task is to generate a single, concise summary paragraph that tells the most important market story.
@@ -41,15 +37,13 @@ Remember, your value is NOT in reporting numbers but in extracting the meaningfu
 let prompt = "";
 
 // Use the PORT environment variable provided by Railway, defaulting to 5500 for local dev
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5500;
 
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-
-const MCP_SERVER_URL = process.env.MCP_SERVER_URL;
 
 console.log("MCP_SERVER_URL", process.env.MCP_SERVER_URL);
 
@@ -60,15 +54,15 @@ app.get("/:promt", async (req: Request, res: Response) => {
   try {
     const llm = new ChatOpenAI({
       openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-4",
+      modelName: "gpt-4o",
       temperature: 1
 
     });
 
     // Use environment variable, fallback for local dev
-    const MCP_SERVER_URL = process.env.MCP_SERVER_URL ;
+    const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3000/.well-known/ai-plugin.json";
     
-    console.log("MCP_SERVER_URL:", MCP_SERVER_URL);
+    console.log("Attempting to create tool with MCP URL:", MCP_SERVER_URL);
     const tools = await createToolFromMCP({
       mcpUrl: MCP_SERVER_URL,
     });
@@ -86,22 +80,7 @@ app.get("/:promt", async (req: Request, res: Response) => {
     
     console.log("First Result",result);
     
-
-    // --- Refinement Step using Direct LLM Call ---
-
-    // 1. Construct the explicit refinement prompt
-    const refinementPrompt = `
-Original User Query: "${prompt}"
-
-Previously Generated Summary:
-"${result.output}"
-
-Task: Please refine the 'Previously Generated Summary' based *only* on the 'Original User Query' and the summary itself. Ensure the final output is a single, concise paragraph analyzing the trends as requested in the original query, strictly adhering to the narrative format without lists or bullet points. Do not add any introductory phrases like "Here's the refined summary:". Just provide the refined paragraph.
-`;
-
    
-
-
     // 3. Use the refined output in the final response
     res.json({
       query: prompt,
@@ -117,7 +96,52 @@ Task: Please refine the 'Previously Generated Summary' based *only* on the 'Orig
   }
 });
 
+function analyzeTimeWindows(data, windowSizes = ['1d', '7d', '30d']) {
+  return windowSizes.map(window => {
+    const windowData = sliceDataByWindow(data, window);
+    return {
+      window,
+      stats: processTimeseriesData(windowData),
+      patterns: identifyPatterns(windowData, window),
+      significance: assessTimeframeSignificance(windowData)
+    };
+  });
+}
 
+function processTimeseriesData(data) {
+  // Sort data chronologically
+  const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+  // Calculate key statistics
+  const stats = {
+    timeRange: {
+      start: sortedData[0]?.date,
+      end: sortedData[sortedData.length - 1]?.date,
+      duration: sortedData.length
+    },
+    metrics: {}
+  };
+
+  // For each numeric metric
+  Object.entries(sortedData[0] || {})
+    .filter(([_, value]) => typeof value === 'number')
+    .forEach(([metric]) => {
+      const values = sortedData.map(d => d[metric]);
+      
+      // Calculate statistical measures
+      stats.metrics[metric] = {
+        min: Math.min(...values),
+        max: Math.max(...values),
+        avg: values.reduce((a, b) => a + b) / values.length,
+        trend: calculateTrend(values),
+        volatility: calculateVolatility(values)
+      };
+    });
+
+  return stats;
+}
+
+ 
 
 
 
