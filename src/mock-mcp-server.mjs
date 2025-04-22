@@ -1,7 +1,7 @@
 import http from 'http';
 import dayjs from 'dayjs';
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;  // Use Railway's PORT env var, fallback to 3000 for local dev
 
 // Mock response data 
 const mockResponse = {
