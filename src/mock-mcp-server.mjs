@@ -3,6 +3,10 @@ import dayjs from 'dayjs';
 
 const PORT = process.env.PORT || 3000;  // Use Railway's PORT env var, fallback to 3000 for local dev
 
+
+
+console.log("Starting mock MCP server...");
+
 // Mock response data 
 const mockResponse = {
   name: "Mock MCP Server",
