@@ -8,17 +8,69 @@ dotenv.config(); // Ensure environment variables are loaded
 
 // Function to extract cryptocurrency symbol from input
 function extractCryptoSymbol(input: string): string | null {
-  // Common cryptocurrency symbols and names
   const cryptoPatterns = [
+    // Major Cryptocurrencies
     { pattern: /\b(bitcoin|btc)\b/i, symbol: 'BTC' },
     { pattern: /\b(ethereum|eth)\b/i, symbol: 'ETH' },
-    { pattern: /\b(solana|sol)\b/i, symbol: 'SOL' },
     { pattern: /\b(binance coin|bnb)\b/i, symbol: 'BNB' },
+    { pattern: /\b(solana|sol)\b/i, symbol: 'SOL' },
     { pattern: /\b(cardano|ada)\b/i, symbol: 'ADA' },
     { pattern: /\b(ripple|xrp)\b/i, symbol: 'XRP' },
-    { pattern: /\b(dogecoin|doge)\b/i, symbol: 'DOGE' },
     { pattern: /\b(polkadot|dot)\b/i, symbol: 'DOT' },
+    { pattern: /\b(dogecoin|doge)\b/i, symbol: 'DOGE' },
+    { pattern: /\b(chainlink|link)\b/i, symbol: 'LINK' },
+    { pattern: /\b(polygon|matic)\b/i, symbol: 'MATIC' },
+    { pattern: /\b(avalanche|avax)\b/i, symbol: 'AVAX' },
     { pattern: /\b(shiba inu|shib)\b/i, symbol: 'SHIB' },
+
+    // DeFi Tokens
+    { pattern: /\b(uniswap|uni)\b/i, symbol: 'UNI' },
+    { pattern: /\b(aave)\b/i, symbol: 'AAVE' },
+    { pattern: /\b(maker|mkr)\b/i, symbol: 'MKR' },
+    { pattern: /\b(compound|comp)\b/i, symbol: 'COMP' },
+    { pattern: /\b(sushi|sushiswap)\b/i, symbol: 'SUSHI' },
+    { pattern: /\b(pancakeswap|cake)\b/i, symbol: 'CAKE' },
+    { pattern: /\b(curve dao|crv)\b/i, symbol: 'CRV' },
+    { pattern: /\b(yearn|yfi)\b/i, symbol: 'YFI' },
+
+    // Layer 1s & Layer 2s
+    { pattern: /\b(arbitrum|arb)\b/i, symbol: 'ARB' },
+    { pattern: /\b(optimism|op)\b/i, symbol: 'OP' },
+    { pattern: /\b(near protocol|near)\b/i, symbol: 'NEAR' },
+    { pattern: /\b(fantom|ftm)\b/i, symbol: 'FTM' },
+    { pattern: /\b(cosmos|atom)\b/i, symbol: 'ATOM' },
+    { pattern: /\b(algorand|algo)\b/i, symbol: 'ALGO' },
+    { pattern: /\b(tezos|xtz)\b/i, symbol: 'XTZ' },
+    { pattern: /\b(hedera|hbar)\b/i, symbol: 'HBAR' },
+
+    // Stablecoins
+    { pattern: /\b(tether|usdt)\b/i, symbol: 'USDT' },
+    { pattern: /\b(usd coin|usdc)\b/i, symbol: 'USDC' },
+    { pattern: /\b(dai)\b/i, symbol: 'DAI' },
+    { pattern: /\b(frax)\b/i, symbol: 'FRAX' },
+
+    // Gaming & Metaverse
+    { pattern: /\b(decentraland|mana)\b/i, symbol: 'MANA' },
+    { pattern: /\b(the sandbox|sand)\b/i, symbol: 'SAND' },
+    { pattern: /\b(axie infinity|axs)\b/i, symbol: 'AXS' },
+    { pattern: /\b(gala)\b/i, symbol: 'GALA' },
+    { pattern: /\b(enjin|enj)\b/i, symbol: 'ENJ' },
+
+    // Other Notable Projects
+    { pattern: /\b(filecoin|fil)\b/i, symbol: 'FIL' },
+    { pattern: /\b(theta)\b/i, symbol: 'THETA' },
+    { pattern: /\b(vechain|vet)\b/i, symbol: 'VET' },
+    { pattern: /\b(stellar|xlm)\b/i, symbol: 'XLM' },
+    { pattern: /\b(monero|xmr)\b/i, symbol: 'XMR' },
+    { pattern: /\b(litecoin|ltc)\b/i, symbol: 'LTC' },
+    { pattern: /\b(internet computer|icp)\b/i, symbol: 'ICP' },
+    { pattern: /\b(render|rndr)\b/i, symbol: 'RNDR' },
+    { pattern: /\b(immutable|imx)\b/i, symbol: 'IMX' },
+    { pattern: /\b(fetch\.ai|fet)\b/i, symbol: 'FET' },
+    { pattern: /\b(injective|inj)\b/i, symbol: 'INJ' },
+    { pattern: /\b(sui)\b/i, symbol: 'SUI' },
+    { pattern: /\b(celestia|tia)\b/i, symbol: 'TIA' },
+    { pattern: /\b(sei)\b/i, symbol: 'SEI' }
   ];
   
   // First check exact matches from the list above
@@ -109,7 +161,9 @@ export class McpTool extends Tool {
                                 input.toLowerCase().includes("market") ||
                                 input.toLowerCase().includes("price") ||
                                 input.toLowerCase().includes("sol") ||
-                                input.toLowerCase().includes("solana");
+                                input.toLowerCase().includes("solana") ||
+                                input.toLowerCase().includes("analys") ||  // Will match 'analysis', 'analyses', 'analyze'
+                                input.toLowerCase().includes("study");     // Additional term for analysis
 
       const symbolFromInput = extractCryptoSymbol(input);
 
