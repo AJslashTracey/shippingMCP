@@ -7,6 +7,10 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
 dotenv.config();
 
+console.log("starting LLM endpoint");
+
+
+
 const app = express();
 const systemMessage = new SystemMessage(`
 Your ONLY task is to generate a single, concise summary paragraph that tells the most important market story.
