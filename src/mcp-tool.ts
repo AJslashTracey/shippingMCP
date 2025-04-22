@@ -313,64 +313,47 @@ export class McpTool extends Tool {
             method: 'GET',
             headers: {
               'accept': 'application/json',
-              'Api-key': apiKey,
+              'x-api-key': apiKey,
             }
           });
 
           if (!trendmoonResponse.ok) {
-            const errorText = await trendmoonResponse.text();
-            console.error(`Error fetching from Trendmoon API: ${trendmoonResponse.status} ${trendmoonResponse.statusText} - ${errorText}`);
-            return `Error from Trendmoon API: ${trendmoonResponse.status} ${trendmoonResponse.statusText}`;
+            const errorBody = await trendmoonResponse.text();
+            console.error(`API Error Response: ${errorBody}`);
+            throw new Error(`API request failed: ${trendmoonResponse.status} ${trendmoonResponse.statusText}`);
           }
 
           const trendmoonData = await trendmoonResponse.json();
           console.log("===== RAW TRENDMOON API RESPONSE =====");
-          console.log(JSON.stringify(trendmoonData, null, 2)); // Log raw response
+          console.log(JSON.stringify(trendmoonData, null, 2));
           console.log("=====================================\n");
 
           if (!trendmoonData) {
             throw new Error('Empty response from Trendmoon API');
           }
 
-          // Summarize the trend data
-          const trendSummary = summarizeTrend(trendmoonData);
+          // Format the data for OpenAI
+          const formattedPrompt = `
+Analyze the following cryptocurrency data for ${symbolFromInput}:
+${JSON.stringify(trendmoonData, null, 2)}
 
-          // Construct the prompt for direct OpenAI call
-          const combinedPrompt = `
-Original User Query: "${input}"
+Generate a single, concise paragraph that:
+1. Describes the overall price trend
+2. Analyzes social metrics and sentiment
+3. Explains the relationship between social activity and price
+4. Highlights any significant patterns or anomalies
 
-You have been provided with the following time-series data for ${trendSummary.symbol} from ${trendSummary.start} to ${trendSummary.end}:
-${JSON.stringify(trendSummary, null, 2)}
-
-**Your Task:**
-Based *only* on the data provided above and the user's original query, generate a SINGLE, concise summary PARAGRAPH.
-
-**Critically Important Output Instructions:**
-1.  Analyze the data internally to understand the overall trends from the beginning to the end of the period. Note the starting and ending price if available.
-2.  Focus SOLELY on synthesizing these trends into a short narrative paragraph. Describe the general price movement (e.g., overall increase/decrease, volatility from start to end) and the corresponding social sentiment trend (e.g., improving/declining, relationship to price). Address the specific focus mentioned in the user's original query if applicable (e.g., "focus on price movement").
-3.  Your entire output MUST be JUST this single summary paragraph.
-4.  **DO NOT** list, itemize, or reproduce ANY daily data points (prices, scores, mentions, dates) in your response. No headers, no bullet points, no lists. Just the narrative paragraph.
-
-Example of CORRECT output structure:
-"Over the observed period [mention start/end dates if possible], ${trendSummary.symbol} experienced [describe overall price trend - e.g., significant volatility, a net decrease/increase] starting around [start price, if available] and ending near [end price, if available]. Social sentiment [describe overall sentiment trend - e.g., generally mirrored the price movement, remained positive despite price drops, declined alongside price] suggesting [interpret the relationship - e.g., waning/growing community interest, detachment from price action]."
-
-Generate the summary paragraph now:
-`;
-
-          console.log("\n===== COMBINED PROMPT FOR OPENAI =====");
-          console.log(combinedPrompt);
-          console.log("======================================\n");
+Format as a natural, flowing paragraph without bullet points or lists.`;
 
           // Call OpenAI API directly
-          console.log("Sending combined prompt to OpenAI...");
-          const llmResponse = await this.llm.invoke(combinedPrompt);
+          console.log("Sending formatted prompt to OpenAI...");
+          const llmResponse = await this.llm.invoke(formattedPrompt);
           const summary = llmResponse.content;
 
-          console.log("\n===== OPENAI RESPONSE (SUMMARY) =====");
+          console.log("\n===== OPENAI RESPONSE =====");
           console.log(summary);
-          console.log("=====================================\n");
+          console.log("===========================\n");
 
-          // Return the summary from OpenAI as the tool's result
           return typeof summary === 'string' ? summary : JSON.stringify(summary);
 
         } catch (apiError: any) {
