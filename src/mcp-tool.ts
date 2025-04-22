@@ -132,7 +132,7 @@ export class McpTool extends Tool {
           method: 'GET',
           headers: {
             'accept': 'application/json',
-            'Api-key': apiKey,
+            'Api-Key': apiKey,
           }
         });
 
@@ -141,6 +141,7 @@ export class McpTool extends Tool {
         }
 
         const data = await response.json();
+        console.log("Trendmoon API response:", JSON.stringify(data).substring(0, 300) + "...");
         return JSON.stringify(data);
       }
 
@@ -167,7 +168,7 @@ export class McpTool extends Tool {
           method: 'GET',
           headers: {
             'accept': 'application/json',
-            'Api-key': apiKey,
+            'Api-Key': apiKey,
           }
         });
 
@@ -176,6 +177,7 @@ export class McpTool extends Tool {
         }
 
         const data = await response.json();
+        console.log("Trendmoon Social API response:", JSON.stringify(data).substring(0, 300) + "...");
         return JSON.stringify(data);
       }
 
@@ -183,6 +185,8 @@ export class McpTool extends Tool {
 
     } catch (error: any) {
       console.error(`Error calling Trendmoon API:`, error);
+      console.error(`API Key present: ${!!process.env.TRENDMOON_API_KEY}`);
+      console.error(`API Key (masked): ${process.env.TRENDMOON_API_KEY ? process.env.TRENDMOON_API_KEY.substring(0, 3) + '...' : 'not set'}`);
       throw error;
     }
   }
